@@ -931,7 +931,7 @@ func (c *Client) Generate(ctx context.Context, request GenerateRequest) (<-chan 
 		}
 		emit := stopSequenceEmitter(matcher, emitEvent, &matchedStopSequence)
 		err := decodeStream(observeStreamActivity(ctx, response.Body), emit)
-		for regenerated := 0; regenerated < regenerations && regenerable(ctx, err, finish, committed); regenerated++ {
+		for regenerated := 0; regenerated < regenerations && !(entry.model.Capabilities["assistant_route"] && assistantResumeAttempts() > 0) && regenerable(ctx, err, finish, committed); regenerated++ {
 			stopClose()
 			_ = response.Body.Close()
 			if response, decodeStream, err = sendRequest(); err != nil {
