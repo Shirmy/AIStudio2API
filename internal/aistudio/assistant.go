@@ -411,10 +411,11 @@ func (c *Client) sendAssistant(ctx context.Context, request GenerateRequest, ent
 			decoder = newDecoder(nextBody)
 			err = errors.Join(DecodeAssistantStream(follow.Body, decoder, collect), follow.Body.Close())
 		}
-		// An extra user turn in the same App continues the reply after the sensitive-words 502.
+		// An extra user turn in the same App continues a partial reply after the sensitive-words 502.
+		// Unfinished function_calls blocks are not stitched by this minimal feature.
 		maxResume := assistantResumeAttempts()
 		for resumed := 0; resumed < maxResume && ctx.Err() == nil &&
-			assistantResumeRetryable(err); resumed++ {
+			!decoder.called && assistantResumeRetryable(err); resumed++ {
 			slog.Info("Build 同 App 敏感词 502 续写", "applet", applet,
 				"attempt", resumed+1, "max", maxResume, "cause", err)
 			followUp := request
